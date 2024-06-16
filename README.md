@@ -3,8 +3,9 @@
 
 ## Overview
 ***
-Code for our SIGIR 2024 (<https://sigir-2024.github.io>) Paper "Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation"
+Code for our SIGIR 2024 (<https://sigir-2024.github.io>) Paper "Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation."
 ![model_arch](https://github.com/cpark88/SyNCRec/blob/main/syncrec_github_arch.png)
+We refered to the source code of S3Rec (<https://github.com/RUCAIBox/CIKM2020-S3Rec/tree/master>).
 
 ## Abstract
 ***
