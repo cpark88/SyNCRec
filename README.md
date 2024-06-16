@@ -15,7 +15,7 @@ Cross-Domain Sequential Recommendation (CDSR) improves recommendation performanc
 ## Usage
 ***
 
-'''
+'''shell
 bash train.sh
 '''
 
