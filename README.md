@@ -15,17 +15,17 @@ Cross-Domain Sequential Recommendation (CDSR) improves recommendation performanc
 ## Usage
 ***
 
-'''shell
+```bash
 bash train.sh
-'''
+```
 
 
 ## Cite
 If you use our codes for your research, cite our paper:
 
-'''
+```
 
-'''
+```
 
 
 [![Top Langs](https://github-readme-stats.vercel.app/api/top-langs/?username=cpark88)](https://github.com/anuraghazra/github-readme-stats)
