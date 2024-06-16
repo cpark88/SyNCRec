@@ -3,7 +3,7 @@
 
 ## Overview
 ***
-Code for our SIGIR 2024 Paper "Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation"
+Code for our SIGIR 2024 (<https://sigir-2024.github.io>) Paper "Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation"
 
 ## Abstract
 ***
