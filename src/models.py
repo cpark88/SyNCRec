@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-# @Time    : 2020/3/30 10:57
-# @Author  : Hui Wang
-
 import numpy as np
 import torch
 import torch.nn as nn
@@ -63,10 +59,8 @@ class CausalModel(nn.Module):
 
 
         if self.args.expert_layer=='ffn':
-            # ffn 만 expert인 버전
             self.expert_=torch.nn.ModuleList([self.ffn_layer for i in range(self.expert_num)])
         elif self.args.expert_layer=='transformer':
-            # transformer 전체가 expert 인 버전     
             self.expert_=torch.nn.ModuleList([self.item_encoder for i in range(self.expert_num)])
         else:
             pass
@@ -141,7 +135,7 @@ class CausalModel(nn.Module):
         extended_attention_mask = (1.0 - extended_attention_mask) * -10000.0
 
         ############## 2. single-only ##############
-        single_domain_loss_list=[] # 각 domain loss를 담아두는 리스트
+        single_domain_loss_list=[] 
         loss_contrastive_single = 0
         domain_list=[5,6,7,8,9]
         
@@ -163,7 +157,7 @@ class CausalModel(nn.Module):
                 encoded_layers = self.att_layer(sequence_emb_single,
                                                   extended_attention_mask,
                                                   output_all_encoded_layers=True)
-                sequence_enc_single = encoded_layers[-1] # [B L H] # 마지막 레이어
+                sequence_enc_single = encoded_layers[-1] # [B L H] 
                 gate_value = self.gate_[domain_index-len(domain_list)](sequence_emb_single.view([sequence_emb_single.size(0),-1]), cross_yn='n', basic_gating=self.basic_gating).unsqueeze(1) # B x 1 x expert_num
                 gate_value_list.append(torch.mean(gate_value,dim=0)[0])
     
@@ -195,19 +189,18 @@ class CausalModel(nn.Module):
 
 
 
-            # gating으로 취합
+            # gating
             task_fea_single = torch.bmm(gate_value, fea_single).squeeze(1).view(-1,self.args.max_seq_length,self.args.hidden_size)
             sequence_output_single_tmp = self.tower_[domain_index-len(domain_list)](task_fea_single)
             sequence_encoder_output_single += sequence_output_single_tmp*((type_input==domain_index).unsqueeze(-1))
 
 
             # single-only loss
-            # lrb를 위한 single domain loss
             single_domain_loss=self.cross_entropy(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input)
             single_domain_loss_list.append(single_domain_loss) # 각 도메인 loss
             
             
-            # 실제 학습 위한 single domain loss
+            # single domain loss
             # single_domain_loss=self.cross_entropy(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index)) # 각 도메인 별 모수 개수로 나눠서 모수가 적어도 학습이 많이 되게 함.  
             single_domain_loss=self.cross_entropy_single(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index))  # 나누지 않아 기존과 같음 (amazon)
             # single_domain_loss=self.cross_entropy_log_inverse(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index), type_pos)  # batch 내 특정 도메인 데이터 수/전체 데이터수 의 log 스케일로 가중치 (skt)
@@ -220,7 +213,7 @@ class CausalModel(nn.Module):
         ############## 3. loss re-balancing part ##############
         if self.args.lrb=='y':
             # 2-2. cross-domain loss        
-            cross_domain_loss_list=[] # cross에서의 각 도메인 loss 담아주는 list
+            cross_domain_loss_list=[] 
             loss_contrastive_cross = 0
             sequence_emb_cross = self.add_position_embedding(item_input, type_input)
 
@@ -229,7 +222,7 @@ class CausalModel(nn.Module):
                 encoded_layers = self.att_layer(sequence_emb_cross,
                                                   extended_attention_mask,
                                                   output_all_encoded_layers=True)
-                sequence_enc_cross = encoded_layers[-1] # [B L H] # 마지막 레이어
+                sequence_enc_cross = encoded_layers[-1] # [B L H]
 
 
                 gate_value = self.gate_[domain_index-len(domain_list)](sequence_emb_cross.view([sequence_emb_cross.size(0),-1]), cross_yn='y', basic_gating=self.basic_gating).unsqueeze(1) # B x 1 x expert_num
@@ -292,10 +285,9 @@ class CausalModel(nn.Module):
             shapley_values_softmax={}
             for k,j in zip(domain_list,shapley_softmax):# loss에 가중치 부여하는 버전에서 추가 
                 shapley_values_softmax[k]=j
-            # print(shapley_values_softmax)
 
 
-            # 최종 loss
+            # final loss
             for domain_index in domain_list:
                 # cross_domain_loss=self.cross_entropy(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index)) # 각 도메인 별 모수 개수로 나눠서 모수가 적어도 학습이 많이 되게 함.  
                 cross_domain_loss=self.cross_entropy_single(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index))  # 나누지 않아 기존과 같음 (amazon)
@@ -311,7 +303,7 @@ class CausalModel(nn.Module):
 
         else: #args.lrb='n'
             # 2-2. cross-domain loss        
-            cross_domain_loss_list=[] # cross에서의 각 도메인 loss 담아주는 list
+            cross_domain_loss_list=[] 
             loss_contrastive_cross = 0
             sequence_output_shared = self.add_position_embedding(item_input, type_input)
         
@@ -332,7 +324,7 @@ class CausalModel(nn.Module):
 
     
             # loss_contrastive_cross_total = self.cross_entropy(sequence_encoder_output_cross, item_pos, item_neg, type_input)
-            loss_contrastive_cross_total=self.cross_entropy_log_inverse(sequence_encoder_output_cross, item_pos, item_neg, type_input, type_pos)  # batch 내 특정 도메인 데이터 수/전체 데이터수 의 log 스케일로 가중치 (skt)
+            loss_contrastive_cross_total=self.cross_entropy_log_inverse(sequence_encoder_output_cross, item_pos, item_neg, type_input, type_pos)
             
             loss_contrastive_cross = torch.tensor(0)
             loss_contrastive_single = torch.tensor(0)
@@ -345,13 +337,11 @@ class CausalModel(nn.Module):
         # 3. MIP
         if self.args.mip=='y':
             # pos_item_embs = self.item_embeddings(item_input)
-            neg_item_embs = self.item_embeddings(item_input[[torch.randperm(item_input.size()[0])]])# 실제 정답인 item_pos를 batch 내에서 shuffling (item_neg도 할수 있으나 loss가 떨어지지 않았음)
+            neg_item_embs = self.item_embeddings(item_input[[torch.randperm(item_input.size()[0])]])
             pos_score = self.masked_item_prediction(sequence_encoder_output_cross, sequence_encoder_output_single) # B*T 개 나옴
             neg_score = self.masked_item_prediction(sequence_encoder_output_cross, neg_item_embs)
             mip_distance = torch.sigmoid(pos_score - neg_score)
             mip_loss = self.criterion(mip_distance, torch.ones_like(mip_distance, dtype=torch.float32))
-            # mip_mask = (masked_item_sequence == self.args.mask_id).float()
-            # mip_loss = torch.sum(mip_loss * mip_mask.flatten())
             mip_loss = mip_loss*((item_pos>0).flatten())
             mip_loss = torch.mean(mip_loss)
 
@@ -402,7 +392,7 @@ class CausalModel(nn.Module):
             encoded_layers = self.att_layer(sequence_emb,
                                               extended_attention_mask,
                                               output_all_encoded_layers=True)
-            sequence_output_cross = encoded_layers[-1] # [B L H] # 마지막 레이어
+            sequence_output_cross = encoded_layers[-1] # [B L H] 
 
 
             gate_value = self.gate_[-1](sequence_emb.view([sequence_emb.size(0),-1]), cross_yn='y',basic_gating=self.basic_gating).unsqueeze(1) # B x 1 x expert_num
@@ -465,7 +455,7 @@ class CausalModel(nn.Module):
         loss = torch.sum(
             - torch.log(torch.sigmoid(pos_logits) + 1e-24) * istarget -
             torch.log(1 - torch.sigmoid(neg_logits) + 1e-24) * istarget
-        )# / (torch.sum(istarget)+1e-24)#sum(istarget)
+        )
         
 
         return loss 

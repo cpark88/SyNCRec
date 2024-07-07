@@ -17,9 +17,9 @@ class CausalDataset(Dataset):
         
     def __len__(self):
         if self.data_type in {"valid","test"}:
-            len_=len(self.user_seq[0])#//1000
+            len_=len(self.user_seq[0])
         else:
-            len_=len(self.user_seq[0])#//1000
+            len_=len(self.user_seq[0])
         return len_
 
     

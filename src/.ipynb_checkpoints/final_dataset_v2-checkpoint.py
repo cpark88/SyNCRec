@@ -31,11 +31,7 @@ from dataset.vocab import WordVocab
 from os import path
 
 
-
-
-########
 parser = argparse.ArgumentParser(description='Pre-training')
-
 parser.add_argument('--data_size', type=int, default=100000000, help='pretrain data size')
 parser.add_argument('--type', type=str, default='pretrain', help='train type')
 parser.add_argument('--max_len', type=int, default=1024, help='size of sequence')
@@ -86,17 +82,13 @@ def main(type='pretrain',strd_ym='202303',data_size=10000000, min_len=32,max_len
     if type=='pretrain':
         print(strd_ym)
 
-
-        #######
-        # 한 user 내에서 마지막 두개만 남겨두는 data split --> 논문 세팅 o
-        # 1. hive load 원본 테이블 로딩            
+        # 1. data loading            
         loader=Preprocessing(strd_ym=strd_ym)
         data_total, voca = loader.pretrain_loader(data_size,min_len,max_len,data_name)
 
         print("Avg. Length of "+data_name+" seq:",data_total['item'].apply(lambda x: len(x.split(','))).mean())
 
-        
-        # 2. voca mapping column 추가테이블
+        # 2. voca mapping column 
         print('Total dataset Vocabulary Mapping...')
         data_total['timestamp']=data_total['unix_time'].apply(lambda x: voca_mapping(x,voca[0],timestamp=True))
         data_total['item_index']=data_total['item'].apply(lambda x: voca_mapping(x,voca[1],timestamp=False))
@@ -111,10 +103,10 @@ def main(type='pretrain',strd_ym='202303',data_size=10000000, min_len=32,max_len
         
         
         
-        # 3. 전체 데이터셋 저장
+        # 3. save data
         with open(data_name+"_list_dataset_"+str(strd_ym)+".pkl", "wb") as fp:   #Pickling
             pickle.dump(final_data, fp)
-        # fp.close()       
+        fp.close()       
 
 if __name__ == '__main__':
     main(type = args.type, data_size=args.data_size,max_len=args.max_len, min_len=args.min_len, strd_ym=args.strd_ym, data_name=args.data_name)
