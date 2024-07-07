@@ -23,7 +23,7 @@ from os import path
 class Preprocessing:
     def __init__(self, strd_ym):
 
-        self.strd_ym=strd_ym #202212 add
+        self.strd_ym=strd_ym 
         
     def pretrain_get_data(self, data_size=20000000,min_len=32,max_len=1024, data_name='amazon'):# 64/1024
         print("Data Loading Start with",data_name)
@@ -55,7 +55,7 @@ class Preprocessing:
             order by rand()
             """
 
-            data=bq_to_pandas(qry)
+            data=query_execute(qry)
             data.to_pickle(data_path)
         else:
             print('File already exists!')
@@ -76,12 +76,11 @@ class Preprocessing:
 
 
     def make_voca(self,data_name='amazon'):
-        # conn = py_hive_connection()
         root_path='pretrained_model/voca'
         if not os.path.exists(root_path):
             os.makedirs(root_path)   
 
-        data_path=root_path+"/"+data_name+"_voca_"+'item'+"_"+self.strd_ym+".ep" #폴더 자동생성하도록 차후 수정해야함
+        data_path=root_path+"/"+data_name+"_voca_"+'item'+"_"+self.strd_ym+".ep" 
 
         if not path.exists(data_path):
             print('No file!')
@@ -92,7 +91,7 @@ class Preprocessing:
                 print('voca dataset loading...')
 
                 qry=f'''select regexp_replace(regexp_replace({i},' ',''),'"','') as {i} , count(*) as cnt from database.svc_amazon_log_20231201 where {i} is not null group by regexp_replace(regexp_replace({i},' ',''),'"','')'''
-                data_raw=bq_to_pandas(qry)
+                data_raw=query_execute(qry)
                 data_raw=data_raw.dropna().reset_index(drop=True)
                 print('voca dataset loading complete!')
                 len_voca = data_raw.shape[0]
