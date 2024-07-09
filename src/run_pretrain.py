@@ -83,28 +83,23 @@ def main_worker():
     parser.add_argument('--single_detach', default='n', type=str, help='detach or not in expert')
     parser.add_argument('--expert_layer', default='transformer', type=str, help='which layer to be expert (transformer, ffn)')
 
-
-    
     parser.add_argument('--except_type', default=[100], type=list,help='except type index list') #13: adot    
     # lrb==y mip==y : ours / n, n : SASRec
-
-    
     args = parser.parse_args()
 
     set_seed(args.seed)
     check_path(args.output_dir)
-    
-    
+
     dist_url='env://'
     args.global_rank = int(os.environ['RANK'])
     args.local_rank = int(os.environ['LOCAL_RANK'])
     args.world_size = int(os.environ['WORLD_SIZE'])
     print("Use GPU: {} for training".format(args.local_rank))
     torch.cuda.set_device(args.local_rank)    
-    
+
     dist.init_process_group(backend='nccl', init_method=dist_url, world_size=args.world_size, rank=args.global_rank)
     dist.barrier()
-    
+
     print("Data Loading Start!")
     with open(args.data_name+"_list_dataset_"+args.strd_ym+".pkl", "rb") as fp:   # Unpickling
         user_seq = pickle.load(fp)
@@ -122,32 +117,26 @@ def main_worker():
 
     max_type = len_voca[0]       
     max_item = len_voca[1]
-    
-    
+
     args.type_size = max_type
     args.item_size = max_item
 
-    
     # save model args
     try:
         args_str = f'{args.model_name}-{args.data_name}-strd_ym_{args.strd_ym}'
         args.output_path = args.output_dir + args.data_name + '/'
         if not os.path.exists(args.output_path):
             os.makedirs(args.output_path)
-            
         args.log_file = os.path.join(args.output_path, args_str + '.txt')
         print(args)
         with open(args.log_file, 'a') as f:
             f.write(str(args) + '\n')
-            
         # save model
         checkpoint = args_str + '.pt'
         args.checkpoint_path = os.path.join(args.output_path, checkpoint)
     except:
         pass
-    
-
-    # torch.autograd.set_detect_anomaly(True) #debugging 
+ 
     torch.cuda.empty_cache()
     # model loading
     model = CausalModel(args=args) #seq_to_profile
@@ -159,14 +148,11 @@ def main_worker():
     test_dataset = CausalDataset(args, user_seq, data_type='test')
     test_sampler = SequentialSampler(test_dataset)
     test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=args.batch_size, num_workers=4, persistent_workers=True)
-  
-   
-    # early_stopping = EarlyStopping(args.checkpoint_path, patience=200, verbose=True)
+
     evaluation_performance=0
     for epoch in range(args.epochs):
         gc.collect()
         train_dataset = CausalDataset(args, user_seq, data_type='train') # for not windowing
-        ############ddp-total dataset version
         train_sampler = DistributedSampler(
             train_dataset,
             # num_replicas=8,
@@ -180,15 +166,8 @@ def main_worker():
 
         trainer.pretrain(epoch, train_dataloader, train=True)
         dist.barrier()
-        
-        
-        
-        
-        ######
-        
+
         if int(os.environ.get("LOCAL_RANK", 0)) == 0:
-            
-            
             test_dataset = CausalDataset(args, user_seq, data_type='test')
             test_sampler = SequentialSampler(test_dataset)
             test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=args.batch_size, num_workers=30, persistent_workers=True)
@@ -209,12 +188,10 @@ def main_worker():
 
         dist.barrier()
 
-
-    
     dist.barrier()
     if int(os.environ.get("LOCAL_RANK", 0)) == 0:
 
-        print('---------------Sample 100 results-------------------')        
+        print('---------------Sample 100 results-------------------')
         (scores, result_info),(scores_5, result_info_5),(scores_6, result_info_6),(scores_7, result_info_7),(scores_8, result_info_8),(scores_9, result_info_9) = trainer.pretrain(epoch, test_dataloader, train=False)
 
         print(args_str)
@@ -228,5 +205,5 @@ def main_worker():
         with open(args.log_file, 'a') as f:
             f.write(args_str + '\n')
             f.write(result_info + '\n')
-            
+
 main_worker()

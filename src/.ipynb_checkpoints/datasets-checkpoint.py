@@ -27,12 +27,7 @@ class CausalDataset(Dataset):
 
         
         type_ = list(map(int, self.user_seq[0][index].split(',')))
-        # items = list(map(int, self.user_seq[1][index].split(',')))
-
-        if self.args.data_name=='skt':
-            items = list(map(int, self.user_seq[3][index].split(',')))
-        else:
-            items = list(map(int, self.user_seq[1][index].split(',')))
+        items = list(map(int, self.user_seq[1][index].split(',')))
 
         total_except = np.where([i!=100 for i in type_])
 

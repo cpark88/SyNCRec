@@ -19,8 +19,6 @@ class CausalModel(nn.Module):
       
         self.prediction_layer = Intermediate(args)
 
-        
-        ###
         self.position_embeddings = nn.Embedding(args.max_seq_length, args.hidden_size)
         self.item_encoder = Encoder(args)
         self.LayerNorm = LayerNorm(args.hidden_size, eps=1e-12)
@@ -29,10 +27,7 @@ class CausalModel(nn.Module):
         self.patitioned_gating = PatitionedGating(args)
         self.ffn_layer = Intermediate(args)
         self.att_layer = EncoderNoFFN(args)
-        ###
 
-
-        
         self.args = args
         self.device = torch.device("cuda:"+str(self.args.local_rank))
 
@@ -46,17 +41,12 @@ class CausalModel(nn.Module):
             self.criterion = nn.NLLLoss(ignore_index=0)
         self.apply(self.init_weights)
 
-
-
         self.softplus = nn.Softplus()
         self.softmax = nn.Softmax(1)
         self.normal = Normal(torch.tensor([0.0]), torch.tensor([1.0]))
 
-                
         self.expert_num = args.expert_num
         self.task_num = args.task_num
-
-
 
         if self.args.expert_layer=='ffn':
             self.expert_=torch.nn.ModuleList([self.ffn_layer for i in range(self.expert_num)])
@@ -64,12 +54,9 @@ class CausalModel(nn.Module):
             self.expert_=torch.nn.ModuleList([self.item_encoder for i in range(self.expert_num)])
         else:
             pass
-        
-        
+
         self.tower_ = torch.nn.ModuleList([self.prediction_layer for i in range(self.task_num)])
 
-
-        
         if self.args.cross_detach=='y' or self.args.single_detach=='y':
             self.basic_gating='n'
         else:
@@ -79,14 +66,13 @@ class CausalModel(nn.Module):
         self.gate_ = torch.nn.ModuleList([self.patitioned_gating.to(self.device) for i in range(self.task_num)])        
         self.mip_norm = nn.Linear(self.args.hidden_size, self.args.hidden_size)
 
-
         #shaply update
         self.alpha = nn.Linear(1,1,bias=False)
         self.beta = nn.Linear(1,1,bias=False)
         self.shaply_values_update = torch.tensor([1/(self.args.task_num -1) for i in range(self.args.task_num -1)])
 
 
-        
+
     def add_position_embedding(self, item_seq, type_seq):
         seq_length = item_seq.size(1)
         position_ids = torch.arange(seq_length, dtype=torch.long, device=item_seq.device)
@@ -151,7 +137,6 @@ class CausalModel(nn.Module):
             #embedding
             sequence_emb_single = self.add_position_embedding((item_input*(type_input==domain_index)), (type_input*(type_input==domain_index))) # B T D
 
-
             # encoder
             if self.args.expert_layer=='ffn':
                 encoded_layers = self.att_layer(sequence_emb_single,
@@ -168,13 +153,11 @@ class CausalModel(nn.Module):
                     fea_2_single = fea_2_single.detach()
                 else:
                     pass    
-                fea_single=torch.cat([fea_1_single, fea_2_single],dim=1)            
-            
-            
+                fea_single=torch.cat([fea_1_single, fea_2_single],dim=1)
+                
             elif self.args.expert_layer=='transformer':
                 gate_value = self.gate_[domain_index-len(domain_list)](sequence_emb_single.view([sequence_emb_single.size(0),-1]), cross_yn='n', basic_gating=self.basic_gating).unsqueeze(1) # B x 1 x expert_num
                 gate_value_list.append(torch.mean(gate_value,dim=0)[0])
-    
 
                 fea_1_single = torch.stack([self.expert_[i](sequence_emb_single, extended_attention_mask,output_all_encoded_layers=True)[-1].view(sequence_emb_single.size(0),-1) for i in range(single_expert_num)], dim = 1) # expert_num B T*D
                 fea_2_single = torch.stack([self.expert_[i+single_expert_num](sequence_emb_single, extended_attention_mask,output_all_encoded_layers=True)[-1].view(sequence_emb_single.size(0),-1) for i in range(cross_expert_num)], dim = 1) # expert_num B T*D
@@ -182,13 +165,9 @@ class CausalModel(nn.Module):
                     fea_2_single = fea_2_single.detach()
                 else:
                     pass    
-                fea_single=torch.cat([fea_1_single, fea_2_single],dim=1)          
-
+                fea_single=torch.cat([fea_1_single, fea_2_single],dim=1)
             else:
                 pass
-
-
-
             # gating
             task_fea_single = torch.bmm(gate_value, fea_single).squeeze(1).view(-1,self.args.max_seq_length,self.args.hidden_size)
             sequence_output_single_tmp = self.tower_[domain_index-len(domain_list)](task_fea_single)
@@ -198,25 +177,16 @@ class CausalModel(nn.Module):
             # single-only loss
             single_domain_loss=self.cross_entropy(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input)
             single_domain_loss_list.append(single_domain_loss) # 각 도메인 loss
-            
-            
             # single domain loss
-            # single_domain_loss=self.cross_entropy(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index)) # 각 도메인 별 모수 개수로 나눠서 모수가 적어도 학습이 많이 되게 함.  
-            single_domain_loss=self.cross_entropy_single(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index))  # 나누지 않아 기존과 같음 (amazon)
-            # single_domain_loss=self.cross_entropy_log_inverse(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index), type_pos)  # batch 내 특정 도메인 데이터 수/전체 데이터수 의 log 스케일로 가중치 (skt)
+            single_domain_loss=self.cross_entropy_single(sequence_output_single_tmp, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index))
             loss_contrastive_single += single_domain_loss * (1/len(domain_list))
-            
-            
-            
-            
-            
+
         ############## 3. loss re-balancing part ##############
         if self.args.lrb=='y':
-            # 2-2. cross-domain loss        
+            # 2-2. cross-domain loss
             cross_domain_loss_list=[] 
             loss_contrastive_cross = 0
             sequence_emb_cross = self.add_position_embedding(item_input, type_input)
-
 
             if self.args.expert_layer=='ffn':
                 encoded_layers = self.att_layer(sequence_emb_cross,
@@ -237,15 +207,10 @@ class CausalModel(nn.Module):
                     pass    
                 fea_cross=torch.cat([fea_1_cross, fea_2_cross],dim=1)     
 
-
-            
             elif self.args.expert_layer=='transformer':
-                
                 gate_value = self.gate_[-1](sequence_emb_cross.view([sequence_emb_cross.size(0),-1]), cross_yn='y', basic_gating=self.basic_gating).unsqueeze(1)
-                gate_value_list.append(torch.mean(gate_value,dim=0)[0])            
-                
+                gate_value_list.append(torch.mean(gate_value,dim=0)[0])
                 fea_1_cross = torch.stack([self.expert_[i](sequence_emb_cross, extended_attention_mask,output_all_encoded_layers=True)[-1].view(sequence_emb_cross.size(0),-1) for i in range(single_expert_num)], dim = 1)
-                # print('++++',fea_1_cross[1,:,:])
                 fea_2_cross = torch.stack([self.expert_[i+single_expert_num](sequence_emb_cross, extended_attention_mask,output_all_encoded_layers=True)[-1].view(sequence_emb_cross.size(0),-1) for i in range(cross_expert_num)], dim = 1) # B x expert_num x (T*hidden_size)
     
                 if self.args.cross_detach=='y':
@@ -256,53 +221,32 @@ class CausalModel(nn.Module):
 
             else:
                 pass
-            
-            
-            
-            #학습용
             sequence_encoder_output_cross = torch.bmm(gate_value, fea_cross).squeeze(1).view(-1,self.args.max_seq_length,self.args.hidden_size).to(self.device) # B x T x hidden_size
             sequence_encoder_output_cross = self.tower_[-1](sequence_encoder_output_cross) # B x T x hidden_size
 
-
- 
-            #option 1
-            # loss_contrastive_cross_total = self.cross_entropy(sequence_encoder_output_cross, item_pos, item_neg, type_input)
             loss_contrastive_cross_total = torch.tensor(0)
-            #option 2 (lrb 위한)
             for domain_index in domain_list:
                 cross_domain_loss=self.cross_entropy(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index))   
-                # cross_domain_loss=self.cross_entropy_log_inverse(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index), type_pos)   
                 cross_domain_loss_list.append(cross_domain_loss)  # --> [x, x, x,x, x]          
             
             # 2-3. loss re-balancing
-            diff=[k[0]-k[1] for k in zip(single_domain_loss_list,cross_domain_loss_list)]# cross의 loss가 더 크다면 더 작은 가중치로 loss를 밸런싱
-            
+            diff=[k[0]-k[1] for k in zip(single_domain_loss_list,cross_domain_loss_list)]
             self.shaply_values_update = self.alpha(self.shaply_values_update.unsqueeze(1).to(self.device)) + self.beta(torch.tensor([i for i in diff]).unsqueeze(1).to(self.device))
             self.shaply_values_update = self.shaply_values_update.squeeze(1)
-            
-            # shapley_softmax=self.softmax_with_temperature(preds=torch.tensor([i for i in diff]),temperature=self.args.temperature) #선택지2
             shapley_softmax=self.softmax_with_temperature(preds=torch.tensor([i for i in self.shaply_values_update]),temperature=self.args.temperature) #선택지2
             shapley_values_softmax={}
-            for k,j in zip(domain_list,shapley_softmax):# loss에 가중치 부여하는 버전에서 추가 
+            for k,j in zip(domain_list,shapley_softmax):
                 shapley_values_softmax[k]=j
-
 
             # final loss
             for domain_index in domain_list:
-                # cross_domain_loss=self.cross_entropy(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index)) # 각 도메인 별 모수 개수로 나눠서 모수가 적어도 학습이 많이 되게 함.  
+
                 cross_domain_loss=self.cross_entropy_single(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index))  # 나누지 않아 기존과 같음 (amazon)
-                # cross_domain_loss=self.cross_entropy_log_inverse(sequence_encoder_output_cross, item_pos*(type_pos==domain_index), item_neg*(type_pos==domain_index), type_input*(type_pos==domain_index), type_pos)  # batch 내 특정 도메인 데이터 수/전체 데이터수 의 log 스케일로 가중치 (skt)
+                
                 loss_contrastive_cross += cross_domain_loss * shapley_values_softmax[domain_index]
-            # loss_contrastive_cross = loss_contrastive_cross/(item_pos>0).sum()
-
-
-
-
-
-        
 
         else: #args.lrb='n'
-            # 2-2. cross-domain loss        
+            # 2-2. cross-domain loss
             cross_domain_loss_list=[] 
             loss_contrastive_cross = 0
             sequence_output_shared = self.add_position_embedding(item_input, type_input)
@@ -311,29 +255,17 @@ class CausalModel(nn.Module):
             
             fea_1_cross = torch.stack([self.expert_[i](sequence_output_shared, extended_attention_mask,output_all_encoded_layers=True)[-1].view(sequence_output_shared.size(0),-1) for i in range(single_expert_num)], dim = 1)
             fea_2_cross = torch.stack([self.expert_[i+single_expert_num](sequence_output_shared, extended_attention_mask,output_all_encoded_layers=True)[-1].view(sequence_output_shared.size(0),-1) for i in range(cross_expert_num)], dim = 1)
-            
             fea_1_cross = fea_1_cross.detach()
-            fea_cross=torch.cat([fea_1_cross, fea_2_cross],dim=1)     
-            
-            
+            fea_cross=torch.cat([fea_1_cross, fea_2_cross],dim=1)
 
             sequence_encoder_output_cross = torch.bmm(gate_value, fea_cross).squeeze(1).view(-1,self.args.max_seq_length,self.args.hidden_size).to(self.device)
             sequence_encoder_output_cross = self.tower_[-1](sequence_encoder_output_cross)
-    
 
-
-    
-            # loss_contrastive_cross_total = self.cross_entropy(sequence_encoder_output_cross, item_pos, item_neg, type_input)
             loss_contrastive_cross_total=self.cross_entropy_log_inverse(sequence_encoder_output_cross, item_pos, item_neg, type_input, type_pos)
             
             loss_contrastive_cross = torch.tensor(0)
             loss_contrastive_single = torch.tensor(0)
 
-
-
-
-
-        
         # 3. MIP
         if self.args.mip=='y':
             # pos_item_embs = self.item_embeddings(item_input)
@@ -348,21 +280,15 @@ class CausalModel(nn.Module):
         else: 
             mip_loss = torch.tensor(0)
 
-
-        
         # 4. Final objectives
         loss=(loss_contrastive_single/1000 + loss_contrastive_cross/1000 + loss_contrastive_cross_total + mip_loss).to(self.device) 
-            
-            
 
-        # print(gate_value_list)
         return loss, loss_contrastive_single/1000, loss_contrastive_cross/1000, mip_loss
     
     
     def get_last_emb(self, item_input,type_input, item_pos, item_neg, type_pos, cuda_yn='y'):
         cross_expert_num=int(self.expert_num*0.8)
         single_expert_num=self.expert_num-cross_expert_num
-        
         
         # for sequence modeling (decoder)
         attention_mask = (item_input > 0).long()
@@ -405,13 +331,10 @@ class CausalModel(nn.Module):
         else:
             pass
 
-       
         sequence_output = torch.bmm(gate_value, fea).squeeze(1).view(-1,self.args.max_seq_length,self.args.hidden_size)
         sequence_output = self.tower_[-1](sequence_output)        
 
-
         eos_output = sequence_output[:,-1,]
-        
         
         return eos_output
     
@@ -420,9 +343,7 @@ class CausalModel(nn.Module):
         # [batch seq_len hidden_size]
         pos_emb = self.item_embeddings(pos_ids)
         neg_emb = self.item_embeddings(neg_ids)
-        
 
-            
         # [batch*seq_len hidden_size]
         pos = pos_emb.view(-1, pos_emb.size(2))
         neg = neg_emb.view(-1, neg_emb.size(2))
@@ -456,8 +377,6 @@ class CausalModel(nn.Module):
             - torch.log(torch.sigmoid(pos_logits) + 1e-24) * istarget -
             torch.log(1 - torch.sigmoid(neg_logits) + 1e-24) * istarget
         )
-        
-
         return loss 
 
 
@@ -478,16 +397,11 @@ class CausalModel(nn.Module):
         loss = torch.sum(
             - torch.log(torch.sigmoid(pos_logits) + 1e-24) * istarget -
             torch.log(1 - torch.sigmoid(neg_logits) + 1e-24) * istarget
-        ) * ( -torch.log( (torch.sum(istarget)+1e-24) / ((type_pos>0).sum()+(torch.sum(istarget)*1)) ) ) #( -torch.log( (torch.sum(istarget)+1e-24) / ((type_pos>0).sum()+1e-24)) )
-        
+        ) * ( -torch.log( (torch.sum(istarget)+1e-24) / ((type_pos>0).sum()+(torch.sum(istarget)*1)) ) )
 
-        return loss 
-
-
-    
+        return loss
     
     def get_acc(self, seq_out, target_pos):
-        # test_item_emb = self.embedding_layer.item_embeddings.weight # [C H]
         test_item_emb = self.item_embeddings.weight # [C H]        
         rating_pred = torch.matmul(seq_out, test_item_emb.transpose(0, 1)) # [B L C]
         rating_pred = torch.argsort(-rating_pred)[:, :, 0] # [B L]
@@ -496,24 +410,18 @@ class CausalModel(nn.Module):
         istarget = (target_pos > 1).view(target_pos.size(0) * self.args.max_seq_length)
         acc = torch.sum((rating_pred==target).float()*istarget) / torch.sum(istarget)
         return acc
-    
 
-        
     def init_weights(self, module):
         """ Initialize the weights.
         """
         if isinstance(module, (nn.Linear, nn.Embedding)):
-            # Slightly different from the TF version which uses truncated_normal for initialization
-            # cf https://github.com/pytorch/pytorch/pull/5617
             module.weight.data.normal_(mean=0.0, std=self.args.initializer_range)
         elif isinstance(module, LayerNorm):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
         if isinstance(module, nn.Linear) and module.bias is not None:
             module.bias.data.zero_()
-            
 
-    
     def softmax_with_temperature(self, preds,temperature):
         ex = torch.exp(preds/temperature)
         return ex / torch.sum(ex, axis=0)

@@ -22,9 +22,6 @@ class Trainer:
 
         self.args = args
         self.mlm_output = nn.Linear(args.hidden_size, args.item_size-1)
-        
-        
-        
         self.local_rank = args.local_rank
         self.device = torch.device("cuda:"+str(self.local_rank))
         self.model = model.to(self.device)
@@ -42,9 +39,7 @@ class Trainer:
             self.criterion = nn.BCELoss()
         else:
             self.criterion = nn.NLLLoss()
-            
-            
-            
+
         ###ddp part
         self.local_rank=self.args.local_rank
         with_cuda=True
@@ -59,7 +54,6 @@ class Trainer:
         ###amp part
         self.scaler = GradScaler(enabled=False,growth_interval=100)
         ###
-            
 
     def get_sample_scores(self, epoch, pred_list):
         pred_list = (-pred_list).argsort().argsort()[:, 0]
@@ -190,14 +184,9 @@ class PretrainTrainer(Trainer):
                 loss.backward()
                 # torch.nn.utils.clip_grad_norm_(self.model.module.parameters(), max_norm=1)
                 self.optim.step()
-
-                
-                
-                
                 loss_contrastive_single_avg += loss_contrastive_single.detach().item()
                 loss_contrastive_cross_avg += loss_contrastive_cross.detach().item()
                 mip_loss_avg += mip_loss.detach().item()
-                
                 loss_avg += loss.detach().item()
 
 
@@ -219,15 +208,11 @@ class PretrainTrainer(Trainer):
         else:        
             self.model.eval()
             
-            
             pred_list = None
             type_pos_list=[]
-            
             with torch.no_grad():
                 for i, batch in rec_data_iter:
                     # 0. batch_data will be sent into the device(GPU or cpu)
-
-                    # batch = tuple(t.to('cuda:0') for t in batch)#cpu self.device
                     batch = tuple(t.to(self.device) for t in batch)#cpu self.device
 
 
@@ -251,13 +236,5 @@ class PretrainTrainer(Trainer):
                         type_pos_list.append(type_pos[:,-1].cpu().detach().numpy().copy())
 
                 type_pos_final=np.concatenate(np.array(type_pos_list))
-                
-                
 
-                    
-                  
-                    
-                return self.get_sample_scores(epoch, pred_list), self.get_sample_scores(epoch, pred_list[type_pos_final==5]) , self.get_sample_scores(epoch, pred_list[type_pos_final==6]) , self.get_sample_scores(epoch, pred_list[type_pos_final==7]) , self.get_sample_scores(epoch, pred_list[type_pos_final==8]) , self.get_sample_scores(epoch, pred_list[type_pos_final==9])  
-
-            
-            
+                return self.get_sample_scores(epoch, pred_list), self.get_sample_scores(epoch, pred_list[type_pos_final==5]) , self.get_sample_scores(epoch, pred_list[type_pos_final==6]) , self.get_sample_scores(epoch, pred_list[type_pos_final==7]) , self.get_sample_scores(epoch, pred_list[type_pos_final==8]) , self.get_sample_scores(epoch, pred_list[type_pos_final==9])
