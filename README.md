@@ -24,7 +24,13 @@ bash train.sh
 If you use our codes for your research, cite our paper:
 
 ```
-Park, C., Kim, T., Yoon, H., Hong, J., Yu, Y., Cho, M., ... & Choo, J. (2024, July). Pacer and Runner: Cooperative Learning Framework between Single-and Cross-Domain Sequential Recommendation. In Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval (pp. 2071-2080).
+@inproceedings{park2024pacer,
+  title={Pacer and Runner: Cooperative Learning Framework between Single-and Cross-Domain Sequential Recommendation},
+  author={Park, Chung and Kim, Taesan and Yoon, Hyungjun and Hong, Junui and Yu, Yelim and Cho, Mincheol and Choi, Minsung and Choo, Jaegul},
+  booktitle={Proceedings of the 47th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+  pages={2071--2080},
+  year={2024}
+}
 ```
 
 
