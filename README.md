@@ -1,9 +1,9 @@
-# Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation (SIGIR '24)
+# Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation (SIGIR '24; Best Paper Honorable Mention)
 [![Hits](https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https%3A%2F%2Fgithub.com%2Fcpark88%2FSyNCRec&count_bg=%2379C83D&title_bg=%23555555&icon=&icon_color=%23E7E7E7&title=hits&edge_flat=false)](https://hits.seeyoufarm.com)
 
 ## Overview
 ***
-Code for our SIGIR 2024 (<https://sigir-2024.github.io>) Paper "Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation." (*Best Paper Honorable Mention)
+Code for our SIGIR 2024 (<https://sigir-2024.github.io>) Paper "Pacer and Runner: Cooperative Learning Framework between Single- and Cross-Domain Sequential Recommendation." 
 ![model_arch](https://github.com/cpark88/SyNCRec/blob/main/syncrec_github_arch.png)
 We referred to the source code of S3Rec (<https://github.com/RUCAIBox/CIKM2020-S3Rec/tree/master>).
 
