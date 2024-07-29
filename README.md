@@ -22,7 +22,9 @@ pip install -r requirements.txt
 ## Dataset
 ***
 
-Download Amazon dataset for the experiment. Should download metadata and reviews files and place them into data/amazon direcotory.
+```bash
+bash make_dataset.sh
+```
 
 
 ## Train
