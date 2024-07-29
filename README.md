@@ -21,7 +21,7 @@ pip install -r requirements.txt
 
 ## Dataset
 ***
-
+To facilitate smooth testing, we have uploaded a small-sized temporary raw data. By executing the command below, the datasets necessary for model training will be generated and saved. 
 ```python
 python make_dataset.py --data_name='amazon' --strd_ym='202312'
 ```
