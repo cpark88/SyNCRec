@@ -1,0 +1,6 @@
+	type	cnt
+0	Books	4846
+1	Clothing_Shoes_and_Jewelry	4765
+2	Sports_and_Outdoors	2505
+3	Toys_and_Games	2563
+4	Video_Games	1444
