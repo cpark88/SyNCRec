@@ -101,7 +101,7 @@ def main_worker():
     dist.barrier()
 
     print("Data Loading Start!")
-    with open(args.data_name+"_list_dataset_"+args.strd_ym+".pkl", "rb") as fp:   # Unpickling
+    with open("data/"+args.strd_ym+"/pretrain/"+args.data_name+"_list_dataset_"+args.strd_ym+".pkl", "rb") as fp:   # Unpickling
         user_seq = pickle.load(fp)
     fp.close()
     print("Data Loading Complete!")

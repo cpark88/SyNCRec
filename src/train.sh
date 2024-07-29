@@ -1,9 +1,9 @@
-torchrun --nproc_per_node=8 --master_port=1234 run_pretrain.py \
---batch_size=2 \
+torchrun --nproc_per_node=4 --master_port=1234 run_pretrain.py \
+--batch_size=128 \
 --hidden_size=512 \
 --num_hidden_layers=2 \
 --num_attention_head=1 \
---epoch=1000 \
+--epoch=1 \
 --max_seq_length=50 \
 --data_name='amazon' \
 --cross_expert_ratio=0.8 \

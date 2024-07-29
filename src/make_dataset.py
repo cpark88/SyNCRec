@@ -11,7 +11,6 @@ import numpy as np
 import pandas as pd
 
 import pyarrow.parquet as pq
-from pyhive import hive
 
 import tqdm
 import json
@@ -37,7 +36,7 @@ parser.add_argument('--type', type=str, default='pretrain', help='train type')
 parser.add_argument('--max_len', type=int, default=1024, help='size of sequence')
 parser.add_argument('--min_len', type=int, default=64, help='size of sequence')
 parser.add_argument('--strd_ym', type=str, default=None, help='ym')
-parser.add_argument('--data_name', type=str, default=None, help='skt')
+parser.add_argument('--data_name', type=str, default=None, help='amazon')
 parser.add_argument('--seq_len', type=int, default=None, help='sequence length')
 
 
@@ -104,7 +103,7 @@ def main(type='pretrain',strd_ym='202303',data_size=10000000, min_len=32,max_len
         
         
         # 3. save data
-        with open(data_name+"_list_dataset_"+str(strd_ym)+".pkl", "wb") as fp:   #Pickling
+        with open("data/"+strd_ym+"/pretrain/"+data_name+"_list_dataset_"+str(strd_ym)+".pkl", "wb") as fp:   #Pickling
             pickle.dump(final_data, fp)
         fp.close()       
 
