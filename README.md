@@ -22,8 +22,8 @@ pip install -r requirements.txt
 ## Dataset
 ***
 
-```bash
-bash make_dataset.sh
+```python
+python make_dataset.py --data_name='amazon' --strd_ym='202312'
 ```
 
 
