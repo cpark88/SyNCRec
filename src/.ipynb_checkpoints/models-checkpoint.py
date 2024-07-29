@@ -2,14 +2,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from modules import Encoder, LayerNorm, Intermediate, NoisyGating, PatitionedGating, EncoderNoFFN
-
 import itertools
 from itertools import combinations
 import math
 from torch.distributions.normal import Normal
 
-
+from modules import Encoder, LayerNorm, Intermediate, NoisyGating, PatitionedGating, EncoderNoFFN
 
 class CausalModel(nn.Module):
     def __init__(self, args):

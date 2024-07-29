@@ -6,27 +6,18 @@ import numpy as np
 import random
 import torch
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
-
 import os
 import argparse
+import torch.distributed as dist
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data.distributed import DistributedSampler
+import gc
 
 from datasets import CausalDataset
 from trainers import PretrainTrainer
 from models import CausalModel
-
 from utils import check_path, set_seed, EarlyStopping
-
-
-
 from dataset.vocab import WordVocab
-
-
-import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data.distributed import DistributedSampler
-
-import gc
-import pickle
 
 
 def main_worker():

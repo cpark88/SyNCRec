@@ -1,7 +1,6 @@
 import numpy as np
 import tqdm
 import random
-
 import torch
 import torch.nn as nn
 from torch.optim import Adam, AdamW
@@ -11,7 +10,6 @@ import torch.distributed as dist
 from torch.nn.parallel import DistributedDataParallel
 import socket
 from torch.cuda.amp import autocast, GradScaler
-
 import gc
 from torch.distributed.optim import ZeroRedundancyOptimizer
 

@@ -1,12 +1,12 @@
 import random
-
 import torch
+import numpy as np
+import pickle
 from torch.utils.data import Dataset
 
 from utils import neg_sample
 
-import numpy as np
-import pickle
+
 
 class CausalDataset(Dataset):
     def __init__(self, args, user_seq, data_type='train'):

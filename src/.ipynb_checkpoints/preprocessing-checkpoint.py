@@ -7,17 +7,14 @@ import time
 import numpy as np
 import pandas as pd
 import json
-from dataset.vocab import WordVocab
 import gc
 import datetime
 from dateutil.relativedelta import relativedelta
 import argparse
 from tqdm import tqdm
-
-import pyarrow.parquet as pq
-
-
 from os import path
+
+from dataset.vocab import WordVocab
 
 class Preprocessing:
     def __init__(self, strd_ym):

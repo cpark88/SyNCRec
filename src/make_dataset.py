@@ -1,20 +1,13 @@
 import pickle
 import random
-
 import os
 import sys
-
 import random
 import time
-
 import numpy as np
 import pandas as pd
-
-import pyarrow.parquet as pq
-
 import tqdm
 import json
-
 import gc
 import datetime
 from dateutil.relativedelta import relativedelta
@@ -24,11 +17,11 @@ import time
 import datetime
 from dateutil.relativedelta import relativedelta
 import argparse
-from preprocessing import Preprocessing
-
-from dataset.vocab import WordVocab
 from os import path
 
+
+from preprocessing import Preprocessing
+from dataset.vocab import WordVocab
 
 parser = argparse.ArgumentParser(description='Pre-training')
 parser.add_argument('--data_size', type=int, default=100000000, help='pretrain data size')
