@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2024/7/14
 # @Author  : Chung Park and Taesan Kim and Hyungjun Yoon
-# @Desc    : torch dataset
+# @Desc    : torch dataset (mapping)
 
 import random
 import torch
