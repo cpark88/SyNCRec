@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# @Time    : 2024/7/14
+# @Author  : Chung Park
+# @Desc    : modules in model
+
 import numpy as np
 import copy
 import math

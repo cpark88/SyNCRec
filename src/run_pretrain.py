@@ -1,6 +1,10 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# @Time    : 2023/12/11 16:01
-# @Author  : cpark
+# @Time    : 2024/7/14
+# @Author  : Chung Park
+# @Desc    : run model training
+
+
 import pickle
 import numpy as np
 import random

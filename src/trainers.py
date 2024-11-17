@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# @Time    : 2024/7/14
+# @Author  : Chung Park
+# @Desc    : trainer
+
 import numpy as np
 import tqdm
 import random

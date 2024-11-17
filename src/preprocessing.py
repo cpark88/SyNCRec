@@ -1,3 +1,9 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+# @Time    : 2024/7/14
+# @Author  : Chung Park
+# @Desc    : data preprocessing
+
 import pickle
 import random
 import os
