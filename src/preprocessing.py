@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 # @Time    : 2024/7/14
-# @Author  : Chung Park and Taesan Kim and Hyungjun Yoon
+# @Author  : Chung Park and Taesan Kim and Hyungjun Yoon and Junui Hong
 # @Desc    : data preprocessing
 
 import pickle
